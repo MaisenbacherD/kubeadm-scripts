@@ -1,4 +1,13 @@
 #!/bin/bash
+
+if [ "$1" = "" ]
+then
+  echo "Usage: $0 <workernode-prefix>"
+  exit
+fi
+
+WORKERNODE_PREFIX="$1"
+
 set -ex
 # Mayastor setup
 sudo modprobe nvme-core
@@ -9,6 +18,7 @@ sudo modprobe nvme-tcp
 sudo modprobe nvmet
 
 ../launch-private-container-registry.sh
+source ./install-nix.sh
 
 #Install the mayastor kubectl plugin from the binaries
 #https://github.com/openebs/mayastor-extensions/actions/runs/4066024991
@@ -20,12 +30,14 @@ sudo modprobe nvmet
 
 
 TAG="v2.0.0-rc.2"
+wget -P $HOME https://github.com/openebs/mayastor/releases/download/v2.0.1/kubectl-mayastor-x86_64-linux-musl.zip
 sudo unzip ~/kubectl-mayastor-x86_64-linux-musl.zip -d /usr/local/bin
 sudo chmod +x /usr/local/bin/kubectl-mayastor
 
-kubectl label node worker-node01 openebs.io/engine=mayastor
-kubectl label node worker-node02 openebs.io/engine=mayastor
-kubectl label node worker-node03 openebs.io/engine=mayastor
+
+kubectl label node ${WORKERNODE_PREFIX}01 openebs.io/engine=mayastor
+kubectl label node ${WORKERNODE_PREFIX}02 openebs.io/engine=mayastor
+kubectl label node ${WORKERNODE_PREFIX}03 openebs.io/engine=mayastor
 
 cd
 git clone https://github.com/MaisenbacherD/mayastor.git
